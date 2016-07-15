@@ -295,6 +295,8 @@ var do_play_song = function(curr) {
   if(    name === 'good_night'
       || name === 'chocobo_waltz'
       || name === 'tiny_bronco'
+      || name === 'ending'
+      || name === 'credits'
       ) {
     time_to_stop = ctx.currentTime + track.audio.duration;
   } else {
