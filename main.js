@@ -107,8 +107,11 @@ var gain = ctx.createGain();
 var tracks = {};
 
 var MAX = 0.1;
+var sel = undefined;
 
 window.onload = function() {
+  sel = document.getElementById('selectbox');
+
   gain.gain.value = 1;
   gain.connect(ctx.destination);
 
@@ -137,7 +140,7 @@ var main_2 = function() {
 };
 
 var playlist;
-var glob_curr = 0;
+var glob_curr = -1;
 
 var main_3 = function(playlist_txt) {
   playlist = playlist_txt.split('\n');
@@ -166,6 +169,15 @@ var main_3 = function(playlist_txt) {
       playlist.splice(i, 1);
   }
 
+  // Populate selectbox
+  for(var i=0; i<playlist.length; ++i) {
+    var text = document.createTextNode(playlist[i]);
+    var option = document.createElement('option');
+    option.appendChild(text);
+    sel.appendChild(option);
+  }
+
+/*
   var div = document.getElementById('div');
   var listener_stop = function(e) {
     document.removeEventListener('mousedown', listener_stop, false);
@@ -182,6 +194,28 @@ var main_3 = function(playlist_txt) {
 
   document.addEventListener('mousedown', listener_play, false);
   div.innerHTML = 'Click here to play music!';
+*/
+
+  var play_button = document.getElementById('play_button');
+  var stop_button = document.getElementById('stop_button');
+
+  stop_button.addEventListener('click', function() {
+    if(glob_curr === -1)
+      return;
+
+    stop_song();
+    glob_curr = -1;
+  }, false);
+  play_button.addEventListener('click', function() {
+    var new_index = sel.selectedIndex;
+
+    if(new_index === -1  ||  new_index === glob_curr)
+      return;
+
+    if(glob_curr !== -1)
+      stop_song();
+    play_song(new_index);
+  }, false);
 };
 
 var timeout_id = undefined;
@@ -221,8 +255,12 @@ play_song = function(curr) {  // curr is an integer
   if(curr >= playlist.length)
     return;
 
+  glob_curr = curr;
+  sel[curr].selected = true;
+
   maybe_start_loading(curr);
-  maybe_start_loading(curr + 1);
+  if(curr + 1 < playlist.length)
+    maybe_start_loading(curr + 1);
 
   // Wait for track to be fully loaded
   var track = tracks[playlist[curr]];
@@ -245,7 +283,6 @@ var do_play_song = function(curr) {
   track.audio.currentTime = 0;
   track.audio.volume = MAX;
   track.audio.play();
-  glob_curr = curr;
 
   var FADE_TIME = 6;
 
