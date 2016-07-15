@@ -228,7 +228,7 @@ play_song = function(curr) {
   }
 
   // Debug
-//  time_to_stop = ctx.currentTime + 5;
+  time_to_stop = ctx.currentTime + 5;
 
   // Schedule the stop and next song
   timeout_id = call_at_time(time_to_stop, function() {
