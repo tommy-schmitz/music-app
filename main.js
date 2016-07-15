@@ -139,6 +139,9 @@ var main_2 = function() {
 var playlist;
 
 var main_3 = function(playlist_txt) {
+  var div = document.getElementById('div');
+  div.innerHTML = 'Ready! Click here!';
+
   playlist = playlist_txt.split('\n');
 
   // "Clean up" of playlist
