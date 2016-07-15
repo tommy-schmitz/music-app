@@ -263,12 +263,15 @@ play_song = function(curr) {  // curr is an integer
     maybe_start_loading(curr + 1);
 
   // Wait for track to be fully loaded
+  document.getElementById('div').innerHTML = 'Loading ...';
   var track = tracks[playlist[curr]];
   var f = function() {
-    if(track.loaded)
+    if(track.loaded) {
+      document.getElementById('div').innerHTML = '';
       do_play_song(curr);
-    else
+    } else {
       timeout_id3 = setTimeout(f, 100);
+    }
   };
   timeout_id3 = setTimeout(f, 0);
 };
@@ -328,6 +331,7 @@ var do_play_song = function(curr) {
 };
 
 stop_song = function(cb) {
+  document.getElementById('div').innerHTML = '';  // Clear "Loading" message
   clearTimeout(timeout_id);
   clearTimeout(timeout_id2);
   clearTimeout(timeout_id3);
