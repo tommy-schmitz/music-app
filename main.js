@@ -114,7 +114,6 @@ window.onload = function() {
 
   var filenames = Object.getOwnPropertyNames(gdrive);
 
-  var b = barrier(filenames.length, main_2);
   for(var i=0; i<filenames.length; ++i) {
     var filename = filenames[i];
     var name = filename;
@@ -124,13 +123,13 @@ window.onload = function() {
     console.log(name);
 
     var track = tracks[name] = {}
-    track.audio = new Audio(
-        'https://drive.google.com/uc?export=download&id=' +
-        gdrive[filename]                                    );
-
-    track.audio.volume = MAX;
-    track.audio.addEventListener('loadedmetadata', b, false);
+    track.src = 'https://drive.google.com/uc?export=download&id='
+                + gdrive[filename];
+    track.loading = false;
+    track.loaded = false;
   }
+
+  main_2();
 };
 
 var main_2 = function() {
@@ -187,12 +186,57 @@ var main_3 = function(playlist_txt) {
 
 var timeout_id = undefined;
 var timeout_id2 = undefined;
+var timeout_id3 = undefined;
+var interval_id = undefined;
+
+maybe_start_loading = function(index) {
+  var track = tracks[playlist[index]];
+
+  if(track.loading)
+    return;
+  track.loading = true;
+
+  var do_start_loading = function() {
+    console.log('do_start_loading();  // index == ' + index);
+    track.audio = new Audio();
+    track.audio.src = track.src;
+    track.audio.addEventListener('loadedmetadata', on_loaded, false);
+    track.audio.addEventListener('error', on_error, false);
+  };
+  var on_loaded = function() {
+    track.loaded = true;
+  };
+  var timeout = 125;
+  var on_error = function() {
+    setTimeout(do_start_loading, timeout);
+    timeout *= 2;
+  };
+
+  do_start_loading();
+};
 
 play_song = function(curr) {  // curr is an integer
-  console.log('play_song, ' + curr);
+  console.log('play_song(' + curr + ')');
 
   if(curr >= playlist.length)
     return;
+
+  maybe_start_loading(curr);
+  maybe_start_loading(curr + 1);
+
+  // Wait for track to be fully loaded
+  var track = tracks[playlist[curr]];
+  var f = function() {
+    if(track.loaded)
+      do_play_song(curr);
+    else
+      timeout_id3 = setTimeout(f, 100);
+  };
+  timeout_id3 = setTimeout(f, 0);
+};
+
+var do_play_song = function(curr) {
+  console.log('do_play_song(' + curr + ')');
 
   var name = playlist[curr];
   var track = tracks[name];
@@ -205,8 +249,6 @@ play_song = function(curr) {  // curr is an integer
 
   var FADE_TIME = 6;
 
-  var handle = undefined;
-
   // Pick when to stop
   var time_to_stop;
   if(    name === 'good_night'
@@ -218,11 +260,11 @@ play_song = function(curr) {  // curr is an integer
     time_to_stop = ctx.currentTime  +  track.audio.duration * (0.5 + Math.random() * 0.3);
 
     // Quick mode
-//    time_to_stop = ctx.currentTime  +  (10 + Math.random() * 5);
+    time_to_stop = ctx.currentTime  +  (10 + Math.random() * 5);
 
     // Schedule the fade-out effect
     timeout_id2 = call_at_time(time_to_stop - FADE_TIME, function() {
-      handle = setInterval(function() {
+      interval_id = setInterval(function() {
         var time = ctx.currentTime;
         var vol = (time_to_stop - time) / FADE_TIME;
         if(vol < 0)
@@ -241,7 +283,7 @@ play_song = function(curr) {  // curr is an integer
 
   // Schedule the stop and next song
   timeout_id = call_at_time(time_to_stop, function() {
-    clearInterval(handle);
+    clearInterval(interval_id);
     stop_song(function() {
       play_song(curr + 1);
     });
@@ -251,13 +293,18 @@ play_song = function(curr) {  // curr is an integer
 stop_song = function(cb) {
   clearTimeout(timeout_id);
   clearTimeout(timeout_id2);
+  clearTimeout(timeout_id3);
+  clearInterval(interval_id);
   var track = tracks[playlist[glob_curr]];
   track.audio.pause();
 
-  setTimeout(function() {
-    if(cb !== undefined)
-      setTimeout(cb, 300);
-  }, 300);
+//  setTimeout(function() {
+//    if(cb !== undefined)
+//      setTimeout(cb, 300);
+//  }, 300);
+
+  if(cb !== undefined)
+    cb();
 };
 
 
