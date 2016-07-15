@@ -194,7 +194,7 @@ play_song = function(curr) {
   track.audio.play();
   glob_curr = curr;
 
-  var FADE_TIME = 4;
+  var FADE_TIME = 6;
 
   var handle = undefined;
 
