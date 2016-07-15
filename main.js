@@ -81,6 +81,7 @@ var barrier = function(n, cb) {
 var ctx = new AudioContext();
 
 var call_at_time = function(time, cb) {
+  console.log('scheduled');
   var target_time = time - 0.2;
 
   var helper = function() {
