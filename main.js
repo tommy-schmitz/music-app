@@ -137,11 +137,9 @@ var main_2 = function() {
 };
 
 var playlist;
+var glob_curr = 0;
 
 var main_3 = function(playlist_txt) {
-  var div = document.getElementById('div');
-  div.innerHTML = 'Ready! Click here!';
-
   playlist = playlist_txt.split('\n');
 
   // "Clean up" of playlist
@@ -168,18 +166,28 @@ var main_3 = function(playlist_txt) {
       playlist.splice(i, 1);
   }
 
-  var listener = function(e) {
-    document.removeEventListener('mousedown', listener, false);
-    play_song(0);
+  var div = document.getElementById('div');
+  var listener_stop = function(e) {
+    document.removeEventListener('mousedown', listener_stop, false);
+    stop_song();
+    document.addEventListener('mousedown', listener_play, false);
+    div.innerHTML = 'Click here to play music!';
   };
-  document.addEventListener('mousedown', listener, false);
+  var listener_play = function(e) {
+    document.removeEventListener('mousedown', listener_play, false);
+    play_song(glob_curr);
+    document.addEventListener('mousedown', listener_stop, false);
+    div.innerHTML = 'Click to STOP.';
+  };
+
+  document.addEventListener('mousedown', listener_play, false);
+  div.innerHTML = 'Click here to play music!';
 };
 
-var glob_curr = undefined;
 var timeout_id = undefined;
 var timeout_id2 = undefined;
 
-play_song = function(curr) {
+play_song = function(curr) {  // curr is an integer
   console.log('play_song, ' + curr);
 
   if(curr >= playlist.length)
