@@ -176,6 +176,7 @@ var main_3 = function(playlist_txt) {
     option.appendChild(text);
     sel.appendChild(option);
   }
+  sel[0].selected = true;
 
 /*
   var div = document.getElementById('div');
