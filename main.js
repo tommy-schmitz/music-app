@@ -215,11 +215,14 @@ play_song = function(curr) {
     timeout_id2 = call_at_time(time_to_stop - FADE_TIME, function() {
       handle = setInterval(function() {
         var time = ctx.currentTime;
-        var vol = (time_to_stop - time) / FADE_TIME * MAX;
+        var vol = (time_to_stop - time) / FADE_TIME;
         if(vol < 0)
           track.audio.volume = 0;
-        else if(vol < MAX)
+        else if(vol < 1) {
+          vol = Math.sin(vol*Math.PI/2) * Math.sin(vol*Math.PI/2);
+          vol *= MAX;
           track.audio.volume = vol;
+        }
       }, 16);
     });
   }
