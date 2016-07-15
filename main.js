@@ -297,7 +297,7 @@ var do_play_song = function(curr) {
     time_to_stop = ctx.currentTime  +  track.audio.duration * (0.5 + Math.random() * 0.3);
 
     // Quick mode
-    time_to_stop = ctx.currentTime  +  (10 + Math.random() * 5);
+//    time_to_stop = ctx.currentTime  +  (10 + Math.random() * 5);
 
     // Schedule the fade-out effect
     timeout_id2 = call_at_time(time_to_stop - FADE_TIME, function() {
