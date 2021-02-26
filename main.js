@@ -643,10 +643,12 @@ maybe_start_loading = function(index) {
     track.audio.addEventListener('error', on_error, false);
   };
   var on_loaded = function() {
+    console.log('on_loaded called');
     track.loaded = true;
   };
   var timeout = 125;
   var on_error = function() {
+    console.log('on_error called');
     setTimeout(do_start_loading, timeout);
     timeout *= 2;
   };
