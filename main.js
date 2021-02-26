@@ -130,7 +130,7 @@ const main_1 = function() {
     name = name.slice(1, -4);
     console.log(name);
 
-    var track = tracks[name] = {}
+    var track = tracks[name] = {};
     track.src = 'https://drive.google.com/uc?export=download&id='
                 + gdrive[filename];
     track.name = name;
