@@ -696,14 +696,15 @@ play_song = function(curr) {  // curr is an integer
   console.log('play_song(' + curr + ')');
 
   const prev = glob_curr;
-  glob_curr = curr;
 
   if(curr === -1  ||  curr === prev  ||  curr >= playlist.length)
     return;
 
   // Stop track that's currently playing, if necessary.
   if(prev !== -1)
-    poke_track(prev);
+    stop_song();
+
+  glob_curr = curr;
 
   sel[curr].selected = true;
 
