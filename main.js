@@ -638,7 +638,7 @@ var poke_track = async function(index) {
   for(;;) {
     try {
       if(!track.loaded  &&  glob_curr !== -1  &&  (playlist[glob_curr] === track.name  ||  playlist[glob_curr + 1] === track.name))
-        await track_load(track);
+        console.log('await track_load(...);  // index is ' + index),  await track_load(track);
       else if(track.loaded  &&  glob_curr === index  &&  !track.playing)
         await track_play(track);
       else if(track.loaded  &&  glob_curr !== index  &&  track.playing)
@@ -671,7 +671,6 @@ const track_stop = async function(track) {
 
 const track_load = (track) => new Promise((resolve, reject) => {
   var do_start_loading = function() {
-    console.log('do_start_loading();  // index == ' + index);
     track.audio = new Audio();
     track.audio.src = track.src;
     track.audio.addEventListener('loadedmetadata', on_loaded, false);
