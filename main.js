@@ -84,7 +84,7 @@ var barrier = function(n, cb) {
   };
 };
 
-var ctx = new AudioContext();
+var ctx;
 
 var call_at_time = function(time, cb) {
   console.log('scheduled');
@@ -109,7 +109,7 @@ var call_at_time = function(time, cb) {
   }
 };
 
-var gain = ctx.createGain();
+var gain;
 var tracks = {};
 
 var MAX = 0.1;
@@ -117,9 +117,6 @@ var sel = undefined;
 
 const main_1 = function() {
   sel = document.getElementById('selectbox');
-
-  gain.gain.value = 1;
-  gain.connect(ctx.destination);
 
   var filenames = Object.getOwnPropertyNames(gdrive);
 
@@ -608,6 +605,13 @@ var main_3 = function(playlist_txt) {
     glob_curr = -1;
   }, false);
   play_button.addEventListener('click', function() {
+    if(ctx === undefined) {
+      ctx = new AudioContext();
+      gain = ctx.createGain();
+      gain.gain.value = 1;
+      gain.connect(ctx.destination);
+    }
+
     var new_index = sel.selectedIndex;
 
     if(new_index === -1  ||  new_index === glob_curr)
