@@ -1,6 +1,12 @@
 (async function() {
 
 
+const onload_promise = new Promise((resolve, reject) => {
+  window.onload = function() {
+    resolve();
+  };
+});
+
 var download_string = function(filename, callback) {
   var xhr = new window.XMLHttpRequest();
   xhr.responseType = 'text';
@@ -108,12 +114,6 @@ var tracks = {};
 
 var MAX = 0.1;
 var sel = undefined;
-
-const onload_promise = new Promise((resolve, reject) => {
-  window.onload = function() {
-    resolve();
-  };
-});
 
 const main_1 = function() {
   sel = document.getElementById('selectbox');
@@ -750,6 +750,10 @@ stop_song = function(cb) {
   if(cb !== undefined)
     cb();
 };
+
+await onload_promise;
+
+main_1();
 
 
 })();
