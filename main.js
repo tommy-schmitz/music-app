@@ -1,6 +1,8 @@
 (async function() {
 
 
+const sleep = (millis) => new Promise((resolve, reject) => setTimeout(resolve, millis));
+
 const onload_promise = new Promise((resolve, reject) => {
   window.onload = function() {
     resolve();
@@ -131,8 +133,10 @@ const main_1 = function() {
     var track = tracks[name] = {}
     track.src = 'https://drive.google.com/uc?export=download&id='
                 + gdrive[filename];
-    track.loading = false;
+    track.name = name;
+    track.asleep = true;
     track.loaded = false;
+    track.playing = false;
   }
 
   main_2();
@@ -602,7 +606,6 @@ var main_3 = function(playlist_txt) {
       return;
 
     stop_song();
-    glob_curr = -1;
   }, false);
   play_button.addEventListener('click', function() {
     if(ctx === undefined) {
@@ -614,11 +617,6 @@ var main_3 = function(playlist_txt) {
 
     var new_index = sel.selectedIndex;
 
-    if(new_index === -1  ||  new_index === glob_curr)
-      return;
-
-    if(glob_curr !== -1)
-      stop_song();
     play_song(new_index);
   }, false);
 };
@@ -628,13 +626,50 @@ var timeout_id2 = undefined;
 var timeout_id3 = undefined;
 var interval_id = undefined;
 
-maybe_start_loading = function(index) {
-  var track = tracks[playlist[index]];
+var poke_track = async function(index) {
+  const track = tracks[playlist[index]];
 
-  if(track.loading)
+  if(!track.asleep)
     return;
-  track.loading = true;
 
+  track.asleep = false;
+
+  let backoff = 125;  // milliseconds
+  for(;;) {
+    try {
+      if(!track.loaded  &&  glob_curr !== -1  &&  (playlist[glob_curr] === track.name  ||  playlist[glob_curr + 1] === track.name))
+        await track_load(track);
+      else if(track.loaded  &&  glob_curr === index  &&  !track.playing)
+        await track_play(track);
+      else if(track.loaded  &&  glob_curr !== index  &&  track.playing)
+        await track_stop(track);
+      else
+        break;
+    } catch(e) {
+      console.log(`Track ${index} (${track.name}) encountered an error. I will attempt to recover from it.`, e);
+      await sleep(backoff);
+      backoff *= 2;
+    }
+  }
+
+  track.asleep = true;
+};
+
+const track_play = async function(track) {
+  track.audio.currentTime = 0;
+  track.audio.volume = MAX;
+  await track.audio.play();
+  track.playing = true;
+  document.getElementById('div').innerHTML = '';
+  setup_timers_and_whatnot(glob_curr);  // Intentionally not using "await" on this line of code.
+};
+
+const track_stop = async function(track) {
+  track.audio.pause();
+  track.playing = false;
+}
+
+const track_load = (track) => new Promise((resolve, reject) => {
   var do_start_loading = function() {
     console.log('do_start_loading();  // index == ' + index);
     track.audio = new Audio();
@@ -645,54 +680,49 @@ maybe_start_loading = function(index) {
   var on_loaded = function() {
     console.log('on_loaded called');
     track.loaded = true;
+    track.audio.removeEventListener('error', on_error);
+    track.audio.removeEventListener('loadedmetadata', on_loaded);
+    resolve();
   };
-  var timeout = 125;
-  var on_error = function() {
-    console.log('on_error called');
-    setTimeout(do_start_loading, timeout);
-    timeout *= 2;
+  var on_error = function(e) {
+    track.audio.removeEventListener('error', on_error);
+    track.audio.removeEventListener('loadedmetadata', on_loaded);
+    reject(e);
   };
 
   do_start_loading();
-};
+});
 
 play_song = function(curr) {  // curr is an integer
   console.log('play_song(' + curr + ')');
 
-  if(curr >= playlist.length)
+  const prev = glob_curr;
+  glob_curr = curr;
+
+  if(curr === -1  ||  curr === prev  ||  curr >= playlist.length)
     return;
 
-  glob_curr = curr;
+  // Stop track that's currently playing, if necessary.
+  if(prev !== -1)
+    poke_track(prev);
+
   sel[curr].selected = true;
 
-  maybe_start_loading(curr);
-  if(curr + 1 < playlist.length)
-    maybe_start_loading(curr + 1);
-
-  // Wait for track to be fully loaded
   document.getElementById('div').innerHTML = 'Loading ...';
-  var track = tracks[playlist[curr]];
-  var f = function() {
-    if(track.loaded) {
-      document.getElementById('div').innerHTML = '';
-      do_play_song(curr);
-    } else {
-      timeout_id3 = setTimeout(f, 100);
-    }
-  };
-  timeout_id3 = setTimeout(f, 0);
+
+  // Start playing the song.
+  poke_track(curr);
+
+  // Start loading the next track, if one exists.
+  if(curr + 1 < playlist.length)
+    poke_track(curr + 1);
 };
 
-var do_play_song = function(curr) {
-  console.log('do_play_song(' + curr + ')');
+var setup_timers_and_whatnot = async function(curr) {
+  console.log('setup_timers_and_whatnot(' + curr + ')');
 
   var name = playlist[curr];
   var track = tracks[name];
-
-  // Play track
-  track.audio.currentTime = 0;
-  track.audio.volume = MAX;
-  track.audio.play();
 
   var FADE_TIME = 6;
 
@@ -745,8 +775,11 @@ stop_song = function(cb) {
   clearTimeout(timeout_id2);
   clearTimeout(timeout_id3);
   clearInterval(interval_id);
-  var track = tracks[playlist[glob_curr]];
-  track.audio.pause();
+
+  // Stop the audio playback.
+  const index = glob_curr;
+  glob_curr = -1;
+  poke_track(index);
 
 //  setTimeout(function() {
 //    if(cb !== undefined)
