@@ -1,4 +1,4 @@
-(function() {
+(async function() {
 
 
 var download_string = function(filename, callback) {
@@ -109,7 +109,13 @@ var tracks = {};
 var MAX = 0.1;
 var sel = undefined;
 
-window.onload = function() {
+const onload_promise = new Promise((resolve, reject) => {
+  window.onload = function() {
+    resolve();
+  };
+});
+
+const main_1 = function() {
   sel = document.getElementById('selectbox');
 
   gain.gain.value = 1;
@@ -746,4 +752,4 @@ stop_song = function(cb) {
 };
 
 
-}());
+})();
