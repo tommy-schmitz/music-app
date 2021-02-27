@@ -640,9 +640,9 @@ var poke_track = async function(index) {
       if(!track.loaded  &&  glob_curr !== -1  &&  (playlist[glob_curr] === track.name  ||  playlist[glob_curr + 1] === track.name))
         console.log('await track_load(...);  // index is ' + index),  await track_load(track);
       else if(track.loaded  &&  glob_curr === index  &&  !track.playing)
-        await track_play(track);
+        console.log('await track_play(...);  // index is ' + index),  await track_play(track);
       else if(track.loaded  &&  glob_curr !== index  &&  track.playing)
-        await track_stop(track);
+        console.log('await track_stop(...);  // index is ' + index),  await track_stop(track);
       else
         break;
     } catch(e) {
@@ -815,6 +815,10 @@ stop_song = function(cb) {
 };
 
 await onload_promise;
+
+setInterval(function() {
+  console.log('...');
+}, 3000)
 
 main_1();
 
