@@ -655,11 +655,35 @@ var poke_track = async function(index) {
   track.asleep = true;
 };
 
-const track_play = async function(track) {
+const track_play = async(track) => {
+  track.loaded = false;
   track.audio.currentTime = 0;
   track.audio.volume = MAX;
-  await track.audio.play();
+  console.log('about to try to call play on Audio object!');
+  await new Promise(async(resolve, reject) => {
+    const audio = track.audio;
+    const on_error = (e) => {
+      audio.removeEventListener('error', on_error);
+      reject(e);
+    };
+    audio.addEventListener('error', on_error);
+    try {
+      console.log('calling play() on Audio object');
+      await audio.play();
+      console.log('called play() on Audio object');
+      audio.removeEventListener('error', on_error);
+      resolve();
+    } catch(e) {
+      audio.removeEventListener('error', on_error);
+      reject(e);
+    }
+  });
+  console.log('got past calling play on Audio object!');
   track.playing = true;
+  track.loaded = true;
+
+  // Technically finished with track_play() at this point, but this is a convenient place to continue on to do other stuff :
+
   document.getElementById('div').innerHTML = '';
   setup_timers_and_whatnot(glob_curr);  // Intentionally not using "await" on this line of code.
 };
