@@ -1,3 +1,4 @@
+global_playlist = `\
 prelude
 opening
 reactor
@@ -389,3 +390,4 @@ one_winged_angel
 sephiroth (mellow)
 ending
 credits
+`;
